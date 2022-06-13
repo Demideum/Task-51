@@ -1,0 +1,275 @@
+namespace Task_51
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            AutoService autoService = new AutoService();
+            autoService.StartWarking();
+            Console.ReadLine();
+        }
+    }
+
+    class AutoService
+    {
+        private List<Detail> _autoService = new List<Detail>();
+        private AutoServiceStock _details;
+        private Queue<Car> _cars;
+        private int _money;
+
+        public AutoService()
+        {
+            _money = 100000;
+            _autoService.Add(new Detail("Аккумулятор", 12000));
+            _autoService.Add(new Detail("Колодки", 10000));
+            _autoService.Add(new Detail("Трансмиссия", 14000));
+            _autoService.Add(new Detail("Фара", 5000));
+            _autoService.Add(new Detail("Бампер", 24000));
+            _details = new AutoServiceStock();
+            _cars = new Queue<Car>();
+            СreateCar(4);
+        }
+
+        public void StartWarking()
+        {
+            bool isWork = true;
+
+            while (isWork && 0 < _cars.Count)
+            {
+                Console.WriteLine($"\nВ нашем автосервисе можно заменить следующие детали:\n");
+                ShowDetaile();
+                Console.WriteLine($"\nНачальный баланс Автосервиса - {_money} монет.");
+                Console.Write($"В очереди на ремон машин - {_cars.Count}" +
+                    $"\nДля начала обслуживания введите \"Start\". " +
+                    $"\nДля завершения работы введите\"Exit\"\n");
+                
+                string userInput = Console.ReadLine();
+
+                switch (userInput)
+                {
+                    case "Start":
+                        ServiceСar();
+                        break;
+                    case "Exit":
+                        isWork = false;
+                        break;
+                    default:
+                        Console.WriteLine("\nОшибка! Проверьте ввод!");
+                        break;
+                }
+            }
+            Console.WriteLine("Клиентов больше нет! Спасибо что были с нами!");
+        }
+
+        private void СreateCar(int numberOfCar)
+        {
+            for (int i = 0; i < numberOfCar; i++)
+            {
+                _cars.Enqueue(new Car());
+            }
+        }
+
+        private void ShowBrakdown(Car car)
+        {
+            Console.WriteLine($"Следует у данного автомобиля следует заменить: {car.BreakdownDetail}.");
+            Console.WriteLine($"\nСумма ремонта составит: {GetRepairPrice(car)} монет.");
+        }
+
+        private void ServiceСar()
+        {
+            Console.Clear();
+            var car = _cars.Dequeue();
+            ShowBrakdown(car);
+            Console.Write("Выберите действие: " +
+                "\n1. Ремонтировать " +
+                "\n2. Отказать клиенту\n ");
+            
+            string userInput = Console.ReadLine();
+
+            switch (userInput)
+            {
+                case "1":
+                    RepairCar(car);
+                    break;
+                case "2":
+                    DenyService();
+                    break;
+                default:
+                    Console.WriteLine("\nОшибка! Проверьте ввод!");
+                    break;
+            }
+            Console.ReadKey();
+            Console.Clear();
+        }
+
+        private void RepairCar(Car car)
+        {
+            if (_details.TryRepairCar(car))
+            {
+                Console.WriteLine($"Замена детали прошла успешно!\n Было заработано {GetRepairPrice(car)} монет.");
+                _money += GetRepairPrice(car);
+            }
+            else
+            {
+                Console.WriteLine($"\n Вы понесли убытки в размере - {GetRepairPrice(car)} монет.");
+                _money -= GetRepairPrice(car);
+            }
+        }
+
+        private int GetRepairPrice(Car car)
+        {
+            int repairPrice = 0;
+            int costWork = 0;
+
+            foreach (var detail in _autoService)
+            {
+                if (car.BreakdownDetail == detail.Name)
+                {
+                    costWork = detail.Price;
+                    repairPrice += detail.Price + costWork;
+                    break;
+                }
+            }
+            return repairPrice;
+        }
+
+        private void DenyService()
+        {
+            int penalty = 2000;
+            Console.WriteLine($"\nПришлось отказать клиенту и заплатить штраф {penalty} монет.");
+            _money -= penalty;
+        }
+
+        private void ShowDetaile()
+        {
+            for (int i = 0; i < _autoService.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. Название - {_autoService[i].Name}. Стоимость - {_autoService[i].Price}");
+            }
+        }
+    }
+
+    class Car
+    {
+        private string[] _numbersBreakdown = new string[] { "2", "3", "4", "5", "6" };
+
+        private Random _random = new Random();
+
+        public Car()
+        {
+            СreateBreakdown();
+        }
+
+        public string BreakdownDetail { get; private set; }
+
+        private void СreateBreakdown()
+        {
+            int numberOfDetal = _random.Next(0, _numbersBreakdown.Length);
+            BreakdownDetail = GetBreakdown(numberOfDetal);
+        }
+
+        private string GetBreakdown(int breakdownNumber)
+        {
+            switch (_numbersBreakdown[breakdownNumber])
+            {
+                case "2":
+                    return "Аккумулятор";
+                case "3":
+                    return "Колодки";
+                case "4":
+                    return "Трансмиссия";
+                case "5":
+                    return "Фара";
+                case "6":
+                    return "Бампер";
+            }
+            return null;
+        }
+    }
+
+    class AutoServiceStock
+    {
+        private List<Detail> _autoServiceStock = new List<Detail>();
+        private string [] _listDetals = new string [] { "Аккумулятор", "Колодки", "Трансмиссия", "Фара", "Бампер" };
+        private Random _random = new Random();
+
+        public AutoServiceStock()
+        {
+            FillOutStock(8);
+        }
+
+        public void ShowDetailsInStock()
+        {
+            Console.WriteLine("Список деталей на складе: ");
+
+            for (int i = 0; i < _autoServiceStock.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. Название - {_autoServiceStock[i].Name}. Стоимость - {_autoServiceStock[i].Price}");
+            }
+        }
+
+        public bool TryRepairCar(Car car)
+        {
+            ShowDetailsInStock();
+            Console.Write("\nВведите номер детали для замены: ");
+            bool isNumber = int.TryParse(Console.ReadLine(), out int inputNumberDetail);
+
+            if (isNumber == false)
+            {
+                Console.WriteLine("Вы выбрали не ту деталь!");
+                return false;
+            }
+            else if (inputNumberDetail > 0 && inputNumberDetail - 1 < _autoServiceStock.Count && car.BreakdownDetail == _autoServiceStock[inputNumberDetail - 1].Name)
+            {
+                int indexDetail = inputNumberDetail - 1;
+                _autoServiceStock.RemoveAt(indexDetail);
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("Вы выбрали не ту деталь!");
+                return false;
+            }
+        }
+
+        private void FillOutStock(int numberOfDetals)
+        {
+            for (int i = 0; i < numberOfDetals; i++)
+            {
+                _autoServiceStock.Add(GetDetail());
+            }
+        }   
+
+        private Detail GetDetail()
+        {
+            int newDetail = _random.Next(0, _listDetals.Length);
+
+            switch (_listDetals[newDetail])
+            {
+                case "Аккумулятор":
+                    return new Detail("Аккумулятор", 12000);
+                case "Колодки":
+                    return new Detail("Колодки", 10000);
+                case "Трансмиссия":
+                    return new Detail("Трансмиссия", 14000);
+                case "Фара":
+                    return new Detail("Фара", 5000);
+                case "Бампер":
+                    return new Detail("Бампер", 24000);
+            }
+            return null;
+        }
+    }
+
+    class Detail
+    {
+        public string Name { get; private set; }
+        public int Price { get; private set; }
+
+        public Detail(string name, int price)
+        {
+            Name = name;
+            Price = price;
+        }
+    }
+}
