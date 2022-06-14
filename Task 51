@@ -162,7 +162,7 @@ namespace Task_51
 
         private void RepairCar(Car car)
         {
-            if (_details.TryRepairCar(car))
+            if (_details.TryFindDetail(car))
             {
                 Console.WriteLine($"Замена детали прошла успешно!\n Было заработано {GetRepairPrice(car)} монет.");
                 _money += GetRepairPrice(car);
@@ -228,7 +228,7 @@ namespace Task_51
             }
         }
 
-        public bool TryRepairCar(Car car)
+        public bool TryFindDetail(Car car)
         {
             ShowDetailsInStock();
             Console.Write("\nВведите номер детали для замены: ");
