@@ -62,10 +62,11 @@ namespace Task_51
 
     class AutoServiceMainOffice
     {
-        protected List<Detail> AutoServiceStore = new List<Detail>();
+        public List<Detail> AutoServiceStore { get; private set; }
 
         public AutoServiceMainOffice()
         {
+            AutoServiceStore = new List<Detail>();
             AutoServiceStore.Add(new Detail("Аккумулятор", 12000));
             AutoServiceStore.Add(new Detail("Колодки", 10000));
             AutoServiceStore.Add(new Detail("Трансмиссия", 14000));
