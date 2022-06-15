@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace Task_51
 {
     internal class Program
@@ -24,8 +30,7 @@ namespace Task_51
 
     class Car
     {
-        private List<string> _breakdown = new List<string>() { "Аккумулятор", "Колодки", "Трансмиссия", "Фара", "Бампер" };
-
+        private List<string> _breakdown = new List<string>() { "Аккумулятор", "Колодки", "Трансмиссия", "Фара", "Бампер", "Шланг", "Руль" };
         private Random _random = new Random();
 
         public Car()
@@ -38,54 +43,22 @@ namespace Task_51
         private void СreateBreakdown()
         {
             int numberOfDetal = _random.Next(0, _breakdown.Count);
-            BreakdownDetail = GetBreakdown(numberOfDetal);
-        }
-
-        private string GetBreakdown(int breakdownNumber)
-        {
-            switch (_breakdown[breakdownNumber])
-            {
-                case "Аккумулятор":
-                    return "Аккумулятор";
-                case "Колодки":
-                    return "Колодки";
-                case "Трансмиссия":
-                    return "Трансмиссия";
-                case "Фара":
-                    return "Фара";
-                case "Бампер":
-                    return "Бампер";
-            }
-            return null;
+            BreakdownDetail = _breakdown[numberOfDetal];
         }
     }
 
-    class AutoServiceMainOffice
+    class AutoService
     {
-
-        private List<Detail> _autoServiceStore;
-
-        public AutoServiceMainOffice()
-        {
-            _autoServiceStore = new List<Detail>();
-            _autoServiceStore.Add(new Detail("Аккумулятор", 12000));
-            _autoServiceStore.Add(new Detail("Колодки", 10000));
-            _autoServiceStore.Add(new Detail("Трансмиссия", 14000));
-            _autoServiceStore.Add(new Detail("Фара", 5000));
-            _autoServiceStore.Add(new Detail("Бампер", 24000));
-        }
-    }
-
-    class AutoService : AutoServiceMainOffice
-    {
-        private AutoServiceStock _details;
+        private List<string> _details = new List<string>() { "Аккумулятор", "Колодки", "Трансмиссия", "Фара", "Бампер" };
+        private List<Detail> _autoServiceStock = new List<Detail>();
         private Queue<Car> _cars;
         private int _money;
+        private Random _random = new Random();
 
         public AutoService()
         {
+            СreateDetail(5);
             _money = 100000;
-            _details = new AutoServiceStock();
             _cars = new Queue<Car>();
             СreateCar(4);
         }
@@ -97,7 +70,7 @@ namespace Task_51
             while (isWork && 0 < _cars.Count)
             {
                 Console.WriteLine($"\nВ нашем автосервисе можно заменить следующие детали:\n");
-                ShowDetaile();
+                ShowDetail();
                 Console.WriteLine($"\nНачальный баланс Автосервиса - {_money} монет.");
                 Console.Write($"В очереди на ремон машин - {_cars.Count}" +
                     $"\nДля начала обслуживания введите \"Start\". " +
@@ -132,7 +105,6 @@ namespace Task_51
         private void ShowBrakdown(Car car)
         {
             Console.WriteLine($"Следует у данного автомобиля следует заменить: {car.BreakdownDetail}.");
-            Console.WriteLine($"\nСумма ремонта составит: {GetRepairPrice(car)} монет.");
         }
 
         private void ServiceСar()
@@ -164,15 +136,23 @@ namespace Task_51
 
         private void RepairCar(Car car)
         {
-            if (_details.TryFindDetail(car))
+            int repairPrice;
+
+            if (TryFindDetail(car))
             {
-                Console.WriteLine($"Замена детали прошла успешно!\n Было заработано {GetRepairPrice(car)} монет.");
-                _money += GetRepairPrice(car);
-            }
-            else
-            {
-                Console.WriteLine($"\n Вы понесли убытки в размере - {GetRepairPrice(car)} монет.");
-                _money -= GetRepairPrice(car);
+                Console.WriteLine($"\nСумма ремонта составит: {GetRepairPrice(car)} монет.");
+                repairPrice = GetRepairPrice(car);
+
+                if (TryRepairCar(car))
+                {
+                    Console.WriteLine($"Замена детали прошла успешно!\n Было заработано {repairPrice} монет.");
+                    _money += repairPrice;
+                }
+                else
+                {
+                    Console.WriteLine($"\n Вы понесли убытки в размере - {GetRepairPrice(car)} монет.");
+                    _money -= GetRepairPrice(car);
+                }
             }
         }
 
@@ -181,7 +161,7 @@ namespace Task_51
             int repairPrice = 0;
             int costWork = 0;
 
-            foreach (var detail in _autoServiceStore)
+            foreach (var detail in _autoServiceStock)
             {
                 if (car.BreakdownDetail == detail.Name)
                 {
@@ -200,27 +180,7 @@ namespace Task_51
             _money -= penalty;
         }
 
-        private void ShowDetaile()
-        {
-            for (int i = 0; i < _autoServiceStore.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}. Название - {_autoServiceStore[i].Name}. Стоимость - {_autoServiceStore[i].Price}");
-            }
-        }
-    }
-
-    class AutoServiceStock : AutoServiceMainOffice
-    {
-        private List<Detail> _autoServiceStock = new List<Detail>();
-
-        private Random _random = new Random();
-
-        public AutoServiceStock()
-        {
-            FillOutStock(8);
-        }
-
-        public void ShowDetailsInStock()
+        private void ShowDetail()
         {
             Console.WriteLine("Список деталей на складе: ");
 
@@ -230,9 +190,23 @@ namespace Task_51
             }
         }
 
-        public bool TryFindDetail(Car car)
+        private bool TryFindDetail(Car car)
         {
-            ShowDetailsInStock();
+            for (int i = 0; i < _autoServiceStock.Count; i++)
+            {
+                if (car.BreakdownDetail == _autoServiceStock[i].Name)
+                {
+                    Console.WriteLine("Деталь для ремонта найдена!");
+                    return true;
+                }
+            }
+            DenyService();
+            return false;
+        }
+
+        private bool TryRepairCar(Car car)
+        {
+            ShowDetail();
             Console.Write("\nВведите номер детали для замены: ");
             bool isNumber = int.TryParse(Console.ReadLine(), out int inputNumberDetail);
 
@@ -254,9 +228,9 @@ namespace Task_51
             }
         }
 
-        private void FillOutStock(int numberOfDetals)
+        private void СreateDetail(int numberOfDetails)
         {
-            for (int i = 0; i < numberOfDetals; i++)
+            for (int i = 0; i < numberOfDetails; i++)
             {
                 _autoServiceStock.Add(GetDetail());
             }
@@ -264,9 +238,22 @@ namespace Task_51
 
         private Detail GetDetail()
         {
-            int newDetail = _random.Next(0, _autoServiceStore.Count);
+            int detailNumber = _random.Next(0, _details.Count);
 
-            return _autoServiceStore[newDetail];
+            switch (_details[detailNumber])
+            {
+                case "Аккумулятор":
+                    return new Detail("Аккумулятор", 12000);
+                case "Колодки":
+                    return new Detail("Колодки", 10000);
+                case "Трансмиссия":
+                    return new Detail("Трансмиссия", 14000);
+                case "Фара":
+                    return new Detail("Фара", 5000);
+                case "Бампер":
+                    return new Detail("Бампер", 24000);
+            }
+            return null;
         }
     }
 }
